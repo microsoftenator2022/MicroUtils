@@ -6,8 +6,6 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-//#pragma warning disable CS1591
-
 namespace MicroUtils
 {
     public readonly struct Option<T> : IEquatable<Option<T>>, IEquatable<T?>, IEnumerable<T> where T : notnull
@@ -166,8 +164,6 @@ namespace MicroUtils
             lifted.Map(Functional.Curry).Apply(optionA).Apply(optionB);
 
         public static IEnumerable<U> Choose<T, U>(this IEnumerable<T> source, Func<T, Option<U>> chooser) where U : notnull =>
-            //source.SelectMany(chooser);
-            // :owlcat_suspecting:
             source.SelectMany(x => chooser(x));
 
         public static Option<T> TryHead<T>(this IEnumerable<T> source) where T : notnull
