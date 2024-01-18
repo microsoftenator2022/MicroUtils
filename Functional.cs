@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 
 namespace MicroUtils
 {
+    public readonly record struct Unit();
+
     /// <summary>
     /// Functional utilities
     /// </summary>
