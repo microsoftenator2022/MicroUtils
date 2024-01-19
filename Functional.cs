@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-namespace MicroUtils
+namespace MicroUtils.Functional
 {
     public readonly record struct Unit();
 

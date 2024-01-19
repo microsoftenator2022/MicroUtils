@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace MicroUtils
+namespace MicroUtils.Functional
 {
     public readonly struct Option<T> : IEquatable<Option<T>>, IEquatable<T?>, IEnumerable<T> where T : notnull
     {
