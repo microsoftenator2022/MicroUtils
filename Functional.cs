@@ -11,6 +11,12 @@ namespace MicroUtils
     public static partial class Functional
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static U Upcast<T, U>(this T t) where T : U => t;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static object Box<T>(this T t) where T : notnull => t;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Identity<T>(T x) => x;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
