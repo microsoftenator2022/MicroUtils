@@ -8,43 +8,23 @@ using System.Text;
 
 namespace MicroUtils.Functional
 {
-    public readonly struct Option<T> : IEquatable<Option<T>>, IEquatable<T?>, IEnumerable<T> where T : notnull
+    public readonly record struct Option<T>() : IEquatable<T?>, IEnumerable<T> where T : notnull
     {
-        public readonly T MaybeValue;
-
-        public T Value => MaybeValue ?? throw new NullReferenceException();
-
-        public readonly bool IsSome;
+        public readonly T? MaybeValue = default!;
+        public readonly T Value => MaybeValue ?? throw new NullReferenceException();
+        public readonly bool IsSome = false;
         public bool IsNone => !IsSome;
 
-        Option(T value)
+        private Option(T value) : this()
         {
             MaybeValue = value;
             IsSome = true;
         }
 
-        public Option()
-        {
-            MaybeValue = default!;
-        }
-
+        public static readonly Option<T> None = default;
         public static Option<T> Some(T value) => new(value);
-        public static readonly Option<T> None = new();
 
         public override string ToString() => this.IsSome ? $"Some {this.Value}" : "None";
-
-        public bool Equals(Option<T> other)
-        {
-            if (this.IsNone)
-                return other.IsNone;
-
-            return this.MaybeValue?.Equals(other.MaybeValue) ??
-                throw new InvalidOperationException(
-                    $"null is an invalid value for {typeof(Option<T>)}.{nameof(Some)}");
-        }
-
-        public static bool operator ==(Option<T> a, Option<T> b) => a.Equals(b);
-        public static bool operator !=(Option<T> a, Option<T> b) => !a.Equals(b);
 
         public bool Equals(T? other) => this switch
         {
@@ -56,14 +36,6 @@ namespace MicroUtils.Functional
         public static bool operator !=(Option<T> a, T? b) => !a.Equals(b);
         public static bool operator ==(T? a, Option<T> b) => b.Equals(a);
         public static bool operator !=(T? a, Option<T> b) => !b.Equals(a);
-
-        public override bool Equals(object? obj) =>
-            base.Equals(obj) ||
-            (obj is Option<T> option && this.Equals(option)) ||
-            (this.MaybeValue is null && obj is null) ||
-            (this.MaybeValue?.Equals(obj) ?? false);
-
-        public override int GetHashCode() => HashCode.Combine(MaybeValue);
 
         public IEnumerator<T> GetEnumerator()
         {
