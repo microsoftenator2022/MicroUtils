@@ -11,10 +11,21 @@ namespace MicroUtils.Functional
     public readonly record struct Option<T>() : IEquatable<T?>, IEnumerable<T> where T : notnull
     {
         public readonly T? MaybeValue = default!;
-        public readonly T Value => MaybeValue ?? throw new NullReferenceException();
-        public readonly bool IsSome = false;
-        public bool IsNone => !IsSome;
+        public readonly T Value
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MaybeValue ?? throw new NullReferenceException();
+        }
 
+        public readonly bool IsSome = false;
+
+        public bool IsNone
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => !IsSome;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Option(T value) : this()
         {
             MaybeValue = value;
@@ -22,6 +33,8 @@ namespace MicroUtils.Functional
         }
 
         public static readonly Option<T> None = default;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<T> Some(T value) => new(value);
 
         public override string ToString() => this.IsSome ? $"Some {this.Value}" : "None";
@@ -54,6 +67,7 @@ namespace MicroUtils.Functional
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<T> None<T>() where T : notnull => Option<T>.None;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<T> OfObj<T>(T? obj) where T : notnull =>
             obj switch
             {
@@ -76,6 +90,7 @@ namespace MicroUtils.Functional
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<A> Return<A>(A value) where A : notnull => Some(value);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<Option<A>, Option<B>> Bind<A, B>(Func<A, Option<B>> binder)
             where A : notnull
             where B : notnull =>
@@ -91,6 +106,7 @@ namespace MicroUtils.Functional
             where B : notnull =>
             Bind(binder)(option);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<Option<A>, Option<B>> Lift<A, B>(Func<A, B> f)
             where A : notnull
             where B : notnull =>
@@ -135,9 +151,11 @@ namespace MicroUtils.Functional
             where C : notnull =>
             lifted.Map(Functional.Curry).Apply(optionA).Apply(optionB);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<U> Choose<T, U>(this IEnumerable<T> source, Func<T, Option<U>> chooser) where U : notnull =>
             source.SelectMany(x => chooser(x));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<T> TryHead<T>(this IEnumerable<T> source) where T : notnull
         {
             foreach (var x in source)
