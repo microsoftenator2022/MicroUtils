@@ -11,21 +11,12 @@ namespace MicroUtils.Functional
     public readonly record struct Option<T>() : IEquatable<T?>, IEnumerable<T> where T : notnull
     {
         public readonly T? MaybeValue = default!;
-        public readonly T Value
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MaybeValue ?? throw new NullReferenceException();
-        }
+        public readonly T Value => MaybeValue ?? throw new NullReferenceException();
 
         public readonly bool IsSome = false;
 
-        public bool IsNone
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => !IsSome;
-        }
+        public bool IsNone => !IsSome;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Option(T value) : this()
         {
             MaybeValue = value;
@@ -34,7 +25,6 @@ namespace MicroUtils.Functional
 
         public static readonly Option<T> None = default;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<T> Some(T value) => new(value);
 
         public override string ToString() => this.IsSome ? $"Some {this.Value}" : "None";
