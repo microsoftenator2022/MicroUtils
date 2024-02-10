@@ -139,7 +139,7 @@ namespace MicroUtils.Functional
             where A : notnull
             where B : notnull
             where C : notnull =>
-            lifted.Map(Functional.Curry).Apply(optionA).Apply(optionB);
+            lifted.Map(F.Curry).Apply(optionA).Apply(optionB);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<U> Choose<T, U>(this IEnumerable<T> source, Func<T, Option<U>> chooser) where U : notnull =>

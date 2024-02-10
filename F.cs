@@ -8,7 +8,7 @@ namespace MicroUtils.Functional
     /// <summary>
     /// Functional utilities
     /// </summary>
-    public static partial class Functional
+    public static partial class F
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static U Upcast<T, U>(this T t) where T : U => t;
