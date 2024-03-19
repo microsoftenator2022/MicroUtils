@@ -47,6 +47,11 @@ namespace MicroUtils.Functional
         }
 
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+        public static implicit operator Option<T>(Microsoft.FSharp.Core.FSharpOption<T> fSharpOption) => Option.FromFSharpOption(fSharpOption);
+        public static implicit operator Option<T>(Microsoft.FSharp.Core.FSharpValueOption<T> fSharpValueOption) => Option.FromFSharpValueOption(fSharpValueOption);
+        public static implicit operator Microsoft.FSharp.Core.FSharpOption<T>(Option<T> option) =>
+            option.IsSome ? Microsoft.FSharp.Core.FSharpOption<T>.Some(option.Value) : Microsoft.FSharp.Core.FSharpOption<T>.None;
     }
 
     public static class Option
@@ -174,5 +179,20 @@ namespace MicroUtils.Functional
                 var some when some.IsSome => some.Value,
                 _ => defaultValue
             };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Option<T> FromFSharpOption<T>(Microsoft.FSharp.Core.FSharpOption<T> fSharpOption) where T : notnull
+        {
+            if (Microsoft.FSharp.Core.FSharpOption<T>.get_IsSome(fSharpOption))
+                return Option.Some(fSharpOption.Value);
+            else return Option<T>.None;
+        }
+
+        public static Option<T> FromFSharpValueOption<T>(Microsoft.FSharp.Core.FSharpValueOption<T> fSharpValueOption) where T : notnull
+        {
+            if (fSharpValueOption.IsValueSome)
+                return Option.Some(fSharpValueOption.Value);
+            else return Option<T>.None;
+        }
     }
 }
