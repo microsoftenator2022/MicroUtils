@@ -76,17 +76,17 @@ namespace MicroUtils.Linq
         /// <typeparam name="TKey">Key type</typeparam>
         /// <typeparam name="TValue">Value type</typeparam>
         /// <param name="source">Source sequence</param>
-        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey key, TValue value)> source) =>
-            source.ToDictionary(kv => kv.key, kv => kv.value);
+        //public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey key, TValue value)> source) =>
+        //    source.ToDictionary(kv => kv.key, kv => kv.value);
 
         /// <summary>
         /// Creates a dictionary from a sequence of Key/Value pairs using a provided <see cref="IEqualityComparer{T}"/>
         /// </summary>
         /// <param name="source">Source sequence</param>
         /// <param name="keyComparer">Key equality comparer</param>
-        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>
-            (this IEnumerable<(TKey key, TValue value)> source, IEqualityComparer<TKey> keyComparer) =>
-            source.ToDictionary(kv => kv.key, kv => kv.value, keyComparer);
+        //public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>
+        //    (this IEnumerable<(TKey key, TValue value)> source, IEqualityComparer<TKey> keyComparer) =>
+        //    source.ToDictionary(kv => kv.key, kv => kv.value, keyComparer);
 
         /// <summary>
         /// Appends a value to an array
@@ -268,29 +268,5 @@ namespace MicroUtils.Linq
         /// <returns>Source sequence, skipping null values, if the source sequence is empty or only contains null values, returns an empty sequence</returns>
         public static IEnumerable<T> SkipIfNull<T>(this IEnumerable<T?> source) where T : class =>
             source.SelectMany(EmptyIfNull);
-
-        /// <summary>
-        /// Generates a sequence using a provided generator function.
-        /// This function is not eagerly evaluated and therefore the resulting sequence length is unbounded
-        /// </summary>
-        /// <typeparam name="TSource">Source type</typeparam>
-        /// <typeparam name="T">Output element type</typeparam>
-        /// <param name="state">Initial (seed) state</param>
-        /// <param name="generator">Generator function</param>
-        /// <returns>Generated sequence</returns>
-        public static IEnumerable<T> Generate<TSource, T>(this TSource state, Func<TSource, Option<(T, TSource)>> generator)
-        {
-            var next = generator(state);
-
-            if (next.IsNone)
-                yield break;
-
-            (var value, state) = next.Value!;
-
-            yield return value;
-
-            foreach (var item in Generate(state, generator))
-                yield return item;
-        }
     }
 }

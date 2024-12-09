@@ -194,5 +194,37 @@ namespace MicroUtils.Functional
                 return Option.Some(fSharpValueOption.Value);
             else return Option<T>.None;
         }
+
+        /// <summary>
+        /// Generates a sequence using a provided generator function.
+        /// This function is not eagerly evaluated and therefore the resulting sequence length is unbounded
+        /// </summary>
+        /// <typeparam name="TSource">Source type</typeparam>
+        /// <typeparam name="T">Output element type</typeparam>
+        /// <param name="state">Initial (seed) state</param>
+        /// <param name="generator">Generator function</param>
+        /// <returns>Generated sequence</returns>
+        public static IEnumerable<T> Generate<TSource, T>(this TSource state, Func<TSource, Option<(T, TSource)>> generator)
+        {
+            var next = generator(state);
+
+            if (next.IsNone)
+                yield break;
+
+            (var value, state) = next.Value!;
+
+            yield return value;
+
+            foreach (var item in Generate(state, generator))
+                yield return item;
+        }
+
+        public static Option<TValue> TryGet<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : notnull
+        {
+            if (dict.TryGetValue(key, out var value))
+                return Option.Some(value);
+
+            return Option<TValue>.None;
+        }
     }
 }
