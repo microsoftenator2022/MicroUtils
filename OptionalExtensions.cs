@@ -8,15 +8,18 @@ using Microsoft.CodeAnalysis;
 
 using MicroUtils.Functional;
 
-namespace MicroUtils.Optional;
+namespace MicroUtils.Types;
 public static class Optional
 {
+    //public static Optional<T> None<T>() => default;
+    public static Optional<T> Some<T>(T value) => value;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Optional<TResult> Map<T, TResult>(this Optional<T> optional, Func<T, TResult> map) =>
         optional.HasValue ? (Optional<TResult>)map(optional.Value) : default;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Optional<T> OfObj<T>(this T? value) where T : notnull =>
+    public static Optional<T> OfNullable<T>(this T? value) where T : notnull =>
         value is not null ? (Optional<T>)value : default;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -49,14 +52,27 @@ public static class Optional
         optional => lifted.Apply(optional);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Optional<TResult> Apply<T1, T2, TResult>(Optional<Func<T1, T2, TResult>> lifted,
+    public static Optional<TResult> Apply2<T1, T2, TResult>(this Optional<Func<T1, T2, TResult>> lifted,
         Optional<T1> optional1,
         Optional<T2> optional2) =>
         lifted.Map(F.Curry).Apply(optional1).Apply(optional2);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Optional<U> Choose<T, U>(this IEnumerable<T> source, Func<T, Optional<U>> chooser) =>
-        source.Select(chooser).FirstOrDefault(optional => optional.HasValue);
+    public static Optional<TResult> Apply<T1, T2, TResult>(this Optional<Func<T1, T2, TResult>> lifted,
+        Optional<T1> optional1,
+        Optional<T2> optional2) =>
+        Apply2(lifted, optional1, optional2);
+
+    public static IEnumerable<U> Choose<T, U>(this IEnumerable<T> source, Func<T, Optional<U>> chooser)
+    {
+        foreach (var element in source)
+        {
+            var selected = chooser(element);
+            if (selected.HasValue)
+                yield return selected.Value;
+        }
+    }
+        
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Optional<T> TryFirst<T>(this IEnumerable<T> source) =>

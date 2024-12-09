@@ -7,7 +7,7 @@ using System;
 //namespace Microsoft.CodeAnalysis
 
 // Change namespace to avoid conflict with Optional<T> from Microsoft.CodeAnalysis.Common
-namespace MicroUtils.Optional;
+namespace MicroUtils.Types;
 
 /// <summary>
 /// Combines a value, <see cref="Value"/>, and a flag, <see cref="HasValue"/>, 
@@ -73,4 +73,6 @@ public readonly struct Optional<T>
             ? _value?.ToString() ?? "null"
             : "unspecified";
     }
+
+    public static readonly Optional<T> None = default;
 }

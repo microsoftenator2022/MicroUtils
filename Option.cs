@@ -6,225 +6,224 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace MicroUtils.Functional
+namespace MicroUtils.Functional.Types;
+
+public readonly record struct Option<T>() : IEquatable<T?>, IEnumerable<T> where T : notnull
 {
-    public readonly record struct Option<T>() : IEquatable<T?>, IEnumerable<T> where T : notnull
+    public readonly T? MaybeValue = default!;
+    public readonly T Value => MaybeValue ?? throw new NullReferenceException();
+
+    public readonly bool IsSome = false;
+
+    public bool IsNone => !IsSome;
+
+    private Option(T value) : this()
     {
-        public readonly T? MaybeValue = default!;
-        public readonly T Value => MaybeValue ?? throw new NullReferenceException();
-
-        public readonly bool IsSome = false;
-
-        public bool IsNone => !IsSome;
-
-        private Option(T value) : this()
-        {
-            MaybeValue = value;
-            IsSome = true;
-        }
-
-        public static readonly Option<T> None = default;
-
-        public static Option<T> Some(T value) => new(value);
-
-        public override string ToString() => this.IsSome ? $"Some {this.Value}" : "None";
-
-        public bool Equals(T? other) => this switch
-        {
-            var some when some.IsSome => some.Value.Equals(other),
-            _ => other is null,
-        };
-
-        public static bool operator ==(Option<T> a, T? b) => a.Equals(b);
-        public static bool operator !=(Option<T> a, T? b) => !a.Equals(b);
-        public static bool operator ==(T? a, Option<T> b) => b.Equals(a);
-        public static bool operator !=(T? a, Option<T> b) => !b.Equals(a);
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            if (IsSome)
-                yield return MaybeValue!;
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-
-        public static implicit operator Option<T>(Microsoft.FSharp.Core.FSharpOption<T> fSharpOption) => Option.FromFSharpOption(fSharpOption);
-        public static implicit operator Option<T>(Microsoft.FSharp.Core.FSharpValueOption<T> fSharpValueOption) => Option.FromFSharpValueOption(fSharpValueOption);
-        public static implicit operator Microsoft.FSharp.Core.FSharpOption<T>(Option<T> option) =>
-            option.IsSome ? Microsoft.FSharp.Core.FSharpOption<T>.Some(option.Value) : Microsoft.FSharp.Core.FSharpOption<T>.None;
+        MaybeValue = value;
+        IsSome = true;
     }
 
-    public static class Option
+    public static readonly Option<T> None = default;
+
+    public static Option<T> Some(T value) => new(value);
+
+    public override string ToString() => this.IsSome ? $"Some {this.Value}" : "None";
+
+    public bool Equals(T? other) => this switch
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<T> Some<T>(T value) where T : notnull => Option<T>.Some(value);
+        var some when some.IsSome => some.Value.Equals(other),
+        _ => other is null,
+    };
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<T> None<T>() where T : notnull => Option<T>.None;
+    public static bool operator ==(Option<T> a, T? b) => a.Equals(b);
+    public static bool operator !=(Option<T> a, T? b) => !a.Equals(b);
+    public static bool operator ==(T? a, Option<T> b) => b.Equals(a);
+    public static bool operator !=(T? a, Option<T> b) => !b.Equals(a);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<T> OfObj<T>(T? obj) where T : notnull =>
-            obj switch
-            {
-                not null => Some(obj),
-                _ => None<T>()
-            };
+    public IEnumerator<T> GetEnumerator()
+    {
+        if (IsSome)
+            yield return MaybeValue!;
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<T> ToOption<T>(this T? obj) where T : notnull => OfObj(obj);
+    IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T? ToObj<T>(Option<T> option) where T : notnull => option.Value;
+    public static implicit operator Option<T>(Microsoft.FSharp.Core.FSharpOption<T> fSharpOption) => Option.FromFSharpOption(fSharpOption);
+    public static implicit operator Option<T>(Microsoft.FSharp.Core.FSharpValueOption<T> fSharpValueOption) => Option.FromFSharpValueOption(fSharpValueOption);
+    public static implicit operator Microsoft.FSharp.Core.FSharpOption<T>(Option<T> option) =>
+        option.IsSome ? Microsoft.FSharp.Core.FSharpOption<T>.Some(option.Value) : Microsoft.FSharp.Core.FSharpOption<T>.None;
+}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsSome<T>(Option<T> option) where T : notnull => option.IsSome;
+public static class Option
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<T> Some<T>(T value) where T : notnull => Option<T>.Some(value);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNone<T>(Option<T> option) where T : notnull => option.IsNone;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<T> None<T>() where T : notnull => Option<T>.None;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<A> Return<A>(A value) where A : notnull => Some(value);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<Option<A>, Option<B>> Bind<A, B>(Func<A, Option<B>> binder)
-            where A : notnull
-            where B : notnull =>
-            option => option switch
-            {
-                var some when some.IsSome => binder(some.Value),
-                _ => Option<B>.None
-            };
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<B> Bind<A, B>(this Option<A> option, Func<A, Option<B>> binder)
-            where A : notnull
-            where B : notnull =>
-            Bind(binder)(option);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<Option<A>, Option<B>> Lift<A, B>(Func<A, B> f)
-            where A : notnull
-            where B : notnull =>
-            option => option switch
-            {
-                var some when some.IsSome => ToOption(f(some.Value)),
-                _ => Option<B>.None
-            };
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<B> Map<A, B>(this Option<A> option, Func<A, B> f)
-            where A : notnull
-            where B : notnull =>
-            Lift(f)(option);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<A> OrElseWith<A>(this Option<A> option, Func<Option<A>> orElseThunk)
-            where A : notnull =>
-            option.IsSome ? option : orElseThunk();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<A> OrElse<A>(this Option<A> option, Option<A> orElse)
-            where A : notnull =>
-            option.IsSome ? option : orElse;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<Option<A>, Option<B>> Apply<A, B>(Option<Func<A, B>> lifted)
-            where A : notnull
-            where B : notnull =>
-            option => lifted.Bind(f => option.Map(f));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<B> Apply<A, B>(this Option<Func<A, B>> lifted, Option<A> option)
-            where A : notnull
-            where B : notnull =>
-            Apply(lifted)(option);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<C> Apply2<A, B, C>(this Option<Func<A, B, C>> lifted, Option<A> optionA, Option<B> optionB)
-            where A : notnull
-            where B : notnull
-            where C : notnull =>
-            lifted.Map(F.Curry).Apply(optionA).Apply(optionB);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<U> Choose<T, U>(this IEnumerable<T> source, Func<T, Option<U>> chooser) where U : notnull =>
-            source.SelectMany(x => chooser(x));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<T> TryHead<T>(this IEnumerable<T> source) where T : notnull
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<T> OfObj<T>(T? obj) where T : notnull =>
+        obj switch
         {
-            foreach (var x in source)
-                return Some(x);
+            not null => Some(obj),
+            _ => None<T>()
+        };
 
-            return None<T>();
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<T> ToOption<T>(this T? obj) where T : notnull => OfObj(obj);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<T> TryFind<T>(this IEnumerable<T> source, Func<T, bool> predicate) where T : notnull =>
-            source.Where(predicate).TryHead();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T? ToObj<T>(Option<T> option) where T : notnull => option.Value;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T DefaultWith<T>(this Option<T> option, Func<T> defaultThunk)
-            where T : notnull =>
-            option switch
-            {
-                var some when some.IsSome => some.Value,
-                _ => defaultThunk()
-            };
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsSome<T>(Option<T> option) where T : notnull => option.IsSome;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T DefaultValue<T>(this Option<T> option, T defaultValue) where T : notnull =>
-            option switch
-            {
-                var some when some.IsSome => some.Value,
-                _ => defaultValue
-            };
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNone<T>(Option<T> option) where T : notnull => option.IsNone;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Option<T> FromFSharpOption<T>(Microsoft.FSharp.Core.FSharpOption<T> fSharpOption) where T : notnull
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<A> Return<A>(A value) where A : notnull => Some(value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Func<Option<A>, Option<B>> Bind<A, B>(Func<A, Option<B>> binder)
+        where A : notnull
+        where B : notnull =>
+        option => option switch
         {
-            if (Microsoft.FSharp.Core.FSharpOption<T>.get_IsSome(fSharpOption))
-                return Option.Some(fSharpOption.Value);
-            else return Option<T>.None;
-        }
+            var some when some.IsSome => binder(some.Value),
+            _ => Option<B>.None
+        };
 
-        public static Option<T> FromFSharpValueOption<T>(Microsoft.FSharp.Core.FSharpValueOption<T> fSharpValueOption) where T : notnull
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<B> Bind<A, B>(this Option<A> option, Func<A, Option<B>> binder)
+        where A : notnull
+        where B : notnull =>
+        Bind(binder)(option);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Func<Option<A>, Option<B>> Lift<A, B>(Func<A, B> f)
+        where A : notnull
+        where B : notnull =>
+        option => option switch
         {
-            if (fSharpValueOption.IsValueSome)
-                return Option.Some(fSharpValueOption.Value);
-            else return Option<T>.None;
-        }
+            var some when some.IsSome => ToOption(f(some.Value)),
+            _ => Option<B>.None
+        };
 
-        /// <summary>
-        /// Generates a sequence using a provided generator function.
-        /// This function is not eagerly evaluated and therefore the resulting sequence length is unbounded
-        /// </summary>
-        /// <typeparam name="TSource">Source type</typeparam>
-        /// <typeparam name="T">Output element type</typeparam>
-        /// <param name="state">Initial (seed) state</param>
-        /// <param name="generator">Generator function</param>
-        /// <returns>Generated sequence</returns>
-        public static IEnumerable<T> Generate<TSource, T>(this TSource state, Func<TSource, Option<(T, TSource)>> generator)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<B> Map<A, B>(this Option<A> option, Func<A, B> f)
+        where A : notnull
+        where B : notnull =>
+        Lift(f)(option);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<A> OrElseWith<A>(this Option<A> option, Func<Option<A>> orElseThunk)
+        where A : notnull =>
+        option.IsSome ? option : orElseThunk();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<A> OrElse<A>(this Option<A> option, Option<A> orElse)
+        where A : notnull =>
+        option.IsSome ? option : orElse;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Func<Option<A>, Option<B>> Apply<A, B>(Option<Func<A, B>> lifted)
+        where A : notnull
+        where B : notnull =>
+        option => lifted.Bind(f => option.Map(f));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<B> Apply<A, B>(this Option<Func<A, B>> lifted, Option<A> option)
+        where A : notnull
+        where B : notnull =>
+        Apply(lifted)(option);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<C> Apply2<A, B, C>(this Option<Func<A, B, C>> lifted, Option<A> optionA, Option<B> optionB)
+        where A : notnull
+        where B : notnull
+        where C : notnull =>
+        lifted.Map(F.Curry).Apply(optionA).Apply(optionB);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IEnumerable<U> Choose<T, U>(this IEnumerable<T> source, Func<T, Option<U>> chooser) where U : notnull =>
+        source.SelectMany(x => chooser(x));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<T> TryHead<T>(this IEnumerable<T> source) where T : notnull
+    {
+        foreach (var x in source)
+            return Some(x);
+
+        return None<T>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<T> TryFind<T>(this IEnumerable<T> source, Func<T, bool> predicate) where T : notnull =>
+        source.Where(predicate).TryHead();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T DefaultWith<T>(this Option<T> option, Func<T> defaultThunk)
+        where T : notnull =>
+        option switch
         {
-            var next = generator(state);
+            var some when some.IsSome => some.Value,
+            _ => defaultThunk()
+        };
 
-            if (next.IsNone)
-                yield break;
-
-            (var value, state) = next.Value!;
-
-            yield return value;
-
-            foreach (var item in Generate(state, generator))
-                yield return item;
-        }
-
-        public static Option<TValue> TryGet<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : notnull
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T DefaultValue<T>(this Option<T> option, T defaultValue) where T : notnull =>
+        option switch
         {
-            if (dict.TryGetValue(key, out var value))
-                return Option.Some(value);
+            var some when some.IsSome => some.Value,
+            _ => defaultValue
+        };
 
-            return Option<TValue>.None;
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<T> FromFSharpOption<T>(Microsoft.FSharp.Core.FSharpOption<T> fSharpOption) where T : notnull
+    {
+        if (Microsoft.FSharp.Core.FSharpOption<T>.get_IsSome(fSharpOption))
+            return Option.Some(fSharpOption.Value);
+        else return Option<T>.None;
+    }
+
+    public static Option<T> FromFSharpValueOption<T>(Microsoft.FSharp.Core.FSharpValueOption<T> fSharpValueOption) where T : notnull
+    {
+        if (fSharpValueOption.IsValueSome)
+            return Option.Some(fSharpValueOption.Value);
+        else return Option<T>.None;
+    }
+
+    /// <summary>
+    /// Generates a sequence using a provided generator function.
+    /// This function is not eagerly evaluated and therefore the resulting sequence length is unbounded
+    /// </summary>
+    /// <typeparam name="TSource">Source type</typeparam>
+    /// <typeparam name="T">Output element type</typeparam>
+    /// <param name="state">Initial (seed) state</param>
+    /// <param name="generator">Generator function</param>
+    /// <returns>Generated sequence</returns>
+    public static IEnumerable<T> Generate<TSource, T>(this TSource state, Func<TSource, Option<(T, TSource)>> generator)
+    {
+        var next = generator(state);
+
+        if (next.IsNone)
+            yield break;
+
+        (var value, state) = next.Value!;
+
+        yield return value;
+
+        foreach (var item in Generate(state, generator))
+            yield return item;
+    }
+
+    public static Option<TValue> TryGet<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : notnull
+    {
+        if (dict.TryGetValue(key, out var value))
+            return Option.Some(value);
+
+        return Option<TValue>.None;
     }
 }
